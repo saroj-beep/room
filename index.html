@@ -87,4 +87,90 @@ document.getElementById("date").textContent =
   (now.getMonth() + 1) + "月" + now.getDate() + "日（" + days[todayIndex] + "）";
 
 // 3. 今日の当番
-document.getElementById("t
+document.getElementById("todayCook").textContent = cook[todayIndex];
+document.getElementById("todayClean").textContent = clean[todayIndex] || "なし";
+
+// 3-2. 今日と明日のゴミ
+const tomorrowIndex = (todayIndex + 1) % 7;
+document.getElementById("todayGomi").textContent = gomi[todayIndex] || "なし";
+document.getElementById("tomorrowGomi").textContent = gomi[tomorrowIndex] || "なし";
+
+// 4. 1週間の表
+let html = "<tr><th>曜日</th><th>料理</th><th>掃除</th><th>ゴミ</th></tr>";
+for (let i = 0; i < 7; i++) {
+  html += "<tr><td>" + days[i] + "</td><td>" + cook[i] + "</td><td>" + (clean[i] || "－") + "</td><td>" + (gomi[i] || "－") + "</td></tr>";
+}
+document.getElementById("table").innerHTML = html;
+
+// 5. 食事チェック（日付が変わったらリセット）
+let meal = JSON.parse(localStorage.getItem("meal") || "{}");
+if (meal.date !== todayKey) {
+  meal = { date: todayKey, ate: [] };
+}
+
+function showMembers() {
+  let buttons = "";
+  for (let i = 0; i < members.length; i++) {
+    const done = meal.ate.includes(members[i]);
+    buttons += "<button onclick='toggleAte(" + i + ")'>" + (done ? "✅ " : "⬜ ") + members[i] + "</button> ";
+  }
+  document.getElementById("members").innerHTML = buttons;
+
+  const notYet = members.filter(name => !meal.ate.includes(name));
+  if (notYet.length === 0) {
+    document.getElementById("message").textContent = "🎉 全員食べました！";
+  } else {
+    document.getElementById("message").textContent = "⚠️ " + notYet.join("、") + " の分を残してください";
+  }
+}
+
+function toggleAte(i) {
+  const name = members[i];
+  if (meal.ate.includes(name)) {
+    meal.ate = meal.ate.filter(n => n !== name);
+  } else {
+    meal.ate.push(name);
+  }
+  localStorage.setItem("meal", JSON.stringify(meal));
+  showMembers();
+}
+
+showMembers();
+
+// 6. 食材ストック
+const statusText = ["🟢 ある", "🟡 少ない", "🔴 ない"];
+let stock = JSON.parse(localStorage.getItem("stock") || "[]");
+
+function showStock() {
+  let list = "";
+  for (let i = 0; i < stock.length; i++) {
+    list += "<li>" + stock[i].name + " "
+          + "<button onclick='changeStatus(" + i + ")'>" + statusText[stock[i].status] + "</button> "
+          + "<button onclick='deleteFood(" + i + ")'>削除</button></li>";
+  }
+  document.getElementById("stock").innerHTML = list;
+  localStorage.setItem("stock", JSON.stringify(stock));
+}
+
+function addFood() {
+  const name = document.getElementById("foodInput").value.trim();
+  if (name === "") return;
+  stock.push({ name: name, status: 0 });
+  document.getElementById("foodInput").value = "";
+  showStock();
+}
+
+function changeStatus(i) {
+  stock[i].status = (stock[i].status + 1) % 3;
+  showStock();
+}
+
+function deleteFood(i) {
+  stock.splice(i, 1);
+  showStock();
+}
+
+showStock();
+  </script>
+</body>
+</html>

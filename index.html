@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>シェアハウス当番表</title>
+  <title>ROOM_MANAGEMENT</title>
   <style>
     body {
   margin: 0;
@@ -48,7 +48,7 @@ li { background: white; padding: 8px 12px; margin-bottom: 8px; border-radius: 10
   </style>
 </head>
 <body>
-  <h1>シェアハウス 当番表</h1>
+  <h1>ROOM_SCHEDULE</h1>
   <p id="date"></p>
 
   <h2>今日の当番</h2>
@@ -72,7 +72,7 @@ li { background: white; padding: 8px 12px; margin-bottom: 8px; border-radius: 10
     // 1. データ
 const members = ["サロジ", "カマル", "スニル", "サウラン"];
 const days  = ["月", "火", "水", "木", "金", "土", "日"];
-const cook  = ["サロジ", "カマル", "スニル", "サロジ", "カマル", "スニル", "サウラン"];
+const cook  = ["カマル", "サロジ", "カマル", "サロジ", "スニル", "サウラン", "スニル"];
 const clean = ["サロジ", "", "カマル", "", "スニル", "", "サウラン"];
 
 // 2. 今日は何曜日？（月曜=0 にする）

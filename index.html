@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>シェアハウス当番表</title>
+  <style>
+    body {
+  margin: 0;
+  padding: 16px;
+  background: #EEF3F6;
+  color: #1F2A44;
+  font-family: "Meiryo", sans-serif;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+h1 { font-size: 24px; }
+h2 { font-size: 18px; margin-top: 28px; border-left: 6px solid #F2B705; padding-left: 8px; }
+
+#todayCook, #todayClean { font-size: 22px; font-weight: bold; }
+
+table { width: 100%; border-collapse: collapse; background: white; }
+th, td { padding: 10px; text-align: center; border: 1px solid #DDE5EA; }
+th { background: #DDE5EA; }
+
+button {
+  padding: 10px 14px;
+  margin: 4px;
+  border: 2px solid #1F2A44;
+  border-radius: 10px;
+  background: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+input {
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px solid #C9D3DA;
+  font-size: 16px;
+}
+
+#message { background: white; padding: 12px; border-radius: 10px; border-left: 6px solid #E63946; }
+
+ul { list-style: none; padding: 0; }
+li { background: white; padding: 8px 12px; margin-bottom: 8px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h1>シェアハウス 当番表</h1>
+  <p id="date"></p>
+
+  <h2>今日の当番</h2>
+  <p>🍳 料理：<span id="todayCook"></span></p>
+  <p>🧹 掃除：<span id="todayClean"></span></p>
+  <p>🗑️ ゴミ出し：サウラン</p>
+
+  <h2>今週の当番</h2>
+  <table id="table" border="1"></table>
+
+  <h2>今日のごはん（食べた人をタップ）</h2>
+  <div id="members"></div>
+  <p id="message"></p>
+
+  <h2>食材ストック</h2>
+  <input id="foodInput" placeholder="例：玉ねぎ">
+  <button onclick="addFood()">追加</button>
+  <ul id="stock"></ul>
+
+  <script>
+    // 1. データ
+const members = ["サロジ", "カマル", "スニル", "サウラン"];
+const days  = ["月", "火", "水", "木", "金", "土", "日"];
+const cook  = ["サロジ", "カマル", "スニル", "サロジ", "カマル", "スニル", "サウラン"];
+const clean = ["サロジ", "", "カマル", "", "スニル", "", "サウラン"];
+
+// 2. 今日は何曜日？（月曜=0 にする）
+const now = new Date();
+const todayIndex = (now.getDay() + 6) % 7;
+const todayKey = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+
+document.getElementById("date").textContent =
+  (now.getMonth() + 1) + "月" + now.getDate() + "日（" + days[todayIndex] + "）";
+
+// 3. 今日の当番
+document.getElementById("todayCook").textContent = cook[todayIndex];
+document.getElementById("todayClean").textContent = clean[todayIndex] || "なし";
+
+// 4. 1週間の表
+let html = "<tr><th>曜日</th><th>料理</th><th>掃除</th></tr>";
+for (let i = 0; i < 7; i++) {
+  html += "<tr><td>" + days[i] + "</td><td>" + cook[i] + "</td><td>" + (clean[i] || "－") + "</td></tr>";
+}
+document.getElementById("table").innerHTML = html;// 5. 食事チェック（日付が変わったらリセット）
+let meal = JSON.parse(localStorage.getItem("meal") || "{}");
+if (meal.date !== todayKey) {
+  meal = { date: todayKey, ate: [] };
+}
+
+function showMembers() {
+  let buttons = "";
+  for (let i = 0; i < members.length; i++) {
+    const done = meal.ate.includes(members[i]);
+    buttons += "<button onclick='toggleAte(" + i + ")'>" + (done ? "✅ " : "⬜ ") + members[i] + "</button> ";
+  }
+  document.getElementById("members").innerHTML = buttons;
+
+  const notYet = members.filter(name => !meal.ate.includes(name));
+  if (notYet.length === 0) {
+    document.getElementById("message").textContent = "🎉 全員食べました！";
+  } else {
+    document.getElementById("message").textContent = "⚠️ " + notYet.join("、") + " の分を残してください";
+  }
+}
+
+function toggleAte(i) {
+  const name = members[i];
+  if (meal.ate.includes(name)) {
+    meal.ate = meal.ate.filter(n => n !== name);
+  } else {
+    meal.ate.push(name);
+  }
+  localStorage.setItem("meal", JSON.stringify(meal));
+  showMembers();
+}
+
+showMembers();
+// 6. 食材ストック
+const statusText = ["🟢 ある", "🟡 少ない", "🔴 ない"];
+let stock = JSON.parse(localStorage.getItem("stock") || "[]");
+
+function showStock() {
+  let list = "";
+  for (let i = 0; i < stock.length; i++) {
+    list += "<li>" + stock[i].name + " "
+          + "<button onclick='changeStatus(" + i + ")'>" + statusText[stock[i].status] + "</button> "
+          + "<button onclick='deleteFood(" + i + ")'>削除</button></li>";
+  }
+  document.getElementById("stock").innerHTML = list;
+  localStorage.setItem("stock", JSON.stringify(stock));
+}
+
+function addFood() {
+  const name = document.getElementById("foodInput").value.trim();
+  if (name === "") return;
+  stock.push({ name: name, status: 0 });
+  document.getElementById("foodInput").value = "";
+  showStock();
+}
+
+function changeStatus(i) {
+  stock[i].status = (stock[i].status + 1) % 3;
+  showStock();
+}
+
+function deleteFood(i) {
+  stock.splice(i, 1);
+  showStock();
+}
+
+showStock();
+  </script>
+</body>
+</html>

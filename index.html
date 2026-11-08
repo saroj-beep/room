@@ -6,45 +6,40 @@
   <title>ROOM_MANAGEMENT</title>
   <style>
     body {
-  margin: 0;
-  padding: 16px;
-  background: #EEF3F6;
-  color: #1F2A44;
-  font-family: "Meiryo", sans-serif;
-  max-width: 520px;
-  margin: 0 auto;
-}
+      padding: 16px;
+      background: aliceblue;
+      color: midnightblue;
+      font-family: sans-serif;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; margin-top: 28px; border-left: 6px solid gold; padding-left: 8px; }
+    .big { font-size: 22px; font-weight: bold; }
 
-h1 { font-size: 24px; }
-h2 { font-size: 18px; margin-top: 28px; border-left: 6px solid #F2B705; padding-left: 8px; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 10px; text-align: center; border: 1px solid lightgray; }
+    th { background: lightgray; }
 
-#todayCook, #todayClean, #todayGomi { font-size: 22px; font-weight: bold; }
+    button {
+      padding: 10px 14px;
+      margin: 4px;
+      border: 2px solid midnightblue;
+      border-radius: 10px;
+      background: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    input {
+      padding: 10px;
+      border: 2px solid silver;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    #message { background: white; padding: 12px; border-radius: 10px; border-left: 6px solid red; }
 
-table { width: 100%; border-collapse: collapse; background: white; }
-th, td { padding: 10px; text-align: center; border: 1px solid #DDE5EA; }
-th { background: #DDE5EA; }
-
-button {
-  padding: 10px 14px;
-  margin: 4px;
-  border: 2px solid #1F2A44;
-  border-radius: 10px;
-  background: white;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-input {
-  padding: 10px;
-  border-radius: 10px;
-  border: 2px solid #C9D3DA;
-  font-size: 16px;
-}
-
-#message { background: white; padding: 12px; border-radius: 10px; border-left: 6px solid #E63946; }
-
-ul { list-style: none; padding: 0; }
-li { background: white; padding: 8px 12px; margin-bottom: 8px; border-radius: 10px; }
+    ul { list-style: none; padding: 0; }
+    li { background: white; padding: 8px 12px; margin-bottom: 8px; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -52,10 +47,10 @@ li { background: white; padding: 8px 12px; margin-bottom: 8px; border-radius: 10
   <p id="date"></p>
 
   <h2>今日の当番</h2>
-  <p>🍳 料理：<span id="todayCook"></span></p>
-  <p>🧹 掃除：<span id="todayClean"></span></p>
+  <p>🍳 料理：<span id="todayCook" class="big"></span></p>
+  <p>🧹 掃除：<span id="todayClean" class="big"></span></p>
   <p>🗑️ ゴミ出し：サウラン</p>
-  <p>🗑️ 今日のゴミ：<span id="todayGomi"></span></p>
+  <p>🗑️ 今日のゴミ：<span id="todayGomi" class="big"></span></p>
   <p>📅 明日のゴミ：<span id="tomorrowGomi"></span></p>
 
   <h2>今週の当番</h2>
@@ -71,106 +66,151 @@ li { background: white; padding: 8px 12px; margin-bottom: 8px; border-radius: 10
   <ul id="stock"></ul>
 
   <script>
-    // 1. データ
-const members = ["サロジ", "カマル", "スニル", "サウラン"];
-const days  = ["月", "火", "水", "木", "金", "土", "日"];
-const cook  = ["カマル", "サロジ", "カマル", "サロジ", "スニル", "サウラン", "スニル"];
-const clean = ["サロジ", "", "カマル", "", "スニル", "", "サウラン"];
-const gomi  = ["", "プラスチック", "燃えるゴミ", "ペットボトル・缶・段ボール", "", "燃えるゴミ", ""];
+    // ===== 1. データ =====
+    let members = ["サロジ", "カマル", "スニル", "サウラン"];
+    let days    = ["月", "火", "水", "木", "金", "土", "日"];
+    let cook    = ["カマル", "サロジ", "カマル", "サロジ", "スニル", "サウラン", "スニル"];
+    let clean   = ["サロジ", "", "カマル", "", "スニル", "", "サウラン"];
+    let gomi    = ["", "プラスチック", "燃えるゴミ", "ペットボトル・缶・段ボール", "", "燃えるゴミ", ""];
 
-// 2. 今日は何曜日？（月曜=0 にする）
-const now = new Date();
-const todayIndex = (now.getDay() + 6) % 7;
-const todayKey = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+    // 空のときに「なし」を返す
+    function orNone(text) {
+      if (text === "") {
+        return "なし";
+      }
+      return text;
+    }
 
-document.getElementById("date").textContent =
-  (now.getMonth() + 1) + "月" + now.getDate() + "日（" + days[todayIndex] + "）";
+    // ===== 2. 今日は何曜日？ =====
+    let now = new Date();
+    let month = now.getMonth() + 1;
+    let date = now.getDate();
 
-// 3. 今日の当番
-document.getElementById("todayCook").textContent = cook[todayIndex];
-document.getElementById("todayClean").textContent = clean[todayIndex] || "なし";
+    // getDay() は 日曜=0。月曜を0にしたいので1を引く
+    let today = now.getDay() - 1;
+    if (today === -1) {
+      today = 6; // 日曜日
+    }
 
-// 3-2. 今日と明日のゴミ
-const tomorrowIndex = (todayIndex + 1) % 7;
-document.getElementById("todayGomi").textContent = gomi[todayIndex] || "なし";
-document.getElementById("tomorrowGomi").textContent = gomi[tomorrowIndex] || "なし";
+    let tomorrow = today + 1;
+    if (tomorrow === 7) {
+      tomorrow = 0; // 日曜の次は月曜
+    }
 
-// 4. 1週間の表
-let html = "<tr><th>曜日</th><th>料理</th><th>掃除</th><th>ゴミ</th></tr>";
-for (let i = 0; i < 7; i++) {
-  html += "<tr><td>" + days[i] + "</td><td>" + cook[i] + "</td><td>" + (clean[i] || "－") + "</td><td>" + (gomi[i] || "－") + "</td></tr>";
-}
-document.getElementById("table").innerHTML = html;
+    let todayKey = now.getFullYear() + "-" + month + "-" + date;
 
-// 5. 食事チェック（日付が変わったらリセット）
-let meal = JSON.parse(localStorage.getItem("meal") || "{}");
-if (meal.date !== todayKey) {
-  meal = { date: todayKey, ate: [] };
-}
+    document.getElementById("date").textContent = month + "月" + date + "日（" + days[today] + "）";
 
-function showMembers() {
-  let buttons = "";
-  for (let i = 0; i < members.length; i++) {
-    const done = meal.ate.includes(members[i]);
-    buttons += "<button onclick='toggleAte(" + i + ")'>" + (done ? "✅ " : "⬜ ") + members[i] + "</button> ";
-  }
-  document.getElementById("members").innerHTML = buttons;
+    // ===== 3. 今日の当番とゴミ =====
+    document.getElementById("todayCook").textContent = cook[today];
+    document.getElementById("todayClean").textContent = orNone(clean[today]);
+    document.getElementById("todayGomi").textContent = orNone(gomi[today]);
+    document.getElementById("tomorrowGomi").textContent = orNone(gomi[tomorrow]);
 
-  const notYet = members.filter(name => !meal.ate.includes(name));
-  if (notYet.length === 0) {
-    document.getElementById("message").textContent = "🎉 全員食べました！";
-  } else {
-    document.getElementById("message").textContent = "⚠️ " + notYet.join("、") + " の分を残してください";
-  }
-}
+    // ===== 4. 1週間の表 =====
+    let table = "<tr><th>曜日</th><th>料理</th><th>掃除</th><th>ゴミ</th></tr>";
+    for (let i = 0; i < 7; i++) {
+      let c = clean[i];
+      if (c === "") {
+        c = "－";
+      }
+      let g = gomi[i];
+      if (g === "") {
+        g = "－";
+      }
+      table = table + "<tr><td>" + days[i] + "</td><td>" + cook[i] + "</td><td>" + c + "</td><td>" + g + "</td></tr>";
+    }
+    document.getElementById("table").innerHTML = table;
 
-function toggleAte(i) {
-  const name = members[i];
-  if (meal.ate.includes(name)) {
-    meal.ate = meal.ate.filter(n => n !== name);
-  } else {
-    meal.ate.push(name);
-  }
-  localStorage.setItem("meal", JSON.stringify(meal));
-  showMembers();
-}
+    // ===== 5. 今日のごはん =====
+    // 保存の形：{ date: "2026-11-8", ate: ["サロジ", "カマル"] }
+    let meal = JSON.parse(localStorage.getItem("meal"));
+    if (meal === null || meal.date !== todayKey) {
+      meal = { date: todayKey, ate: [] }; // 日付が変わったらリセット
+    }
 
-showMembers();
+    function showMembers() {
+      let buttons = "";
+      let notYet = "";
 
-// 6. 食材ストック
-const statusText = ["🟢 ある", "🟡 少ない", "🔴 ない"];
-let stock = JSON.parse(localStorage.getItem("stock") || "[]");
+      for (let i = 0; i < members.length; i++) {
+        let name = members[i];
+        if (meal.ate.includes(name)) {
+          buttons = buttons + "<button onclick='toggleAte(" + i + ")'>✅ " + name + "</button> ";
+        } else {
+          buttons = buttons + "<button onclick='toggleAte(" + i + ")'>⬜ " + name + "</button> ";
+          if (notYet !== "") {
+            notYet = notYet + "、";
+          }
+          notYet = notYet + name;
+        }
+      }
+      document.getElementById("members").innerHTML = buttons;
 
-function showStock() {
-  let list = "";
-  for (let i = 0; i < stock.length; i++) {
-    list += "<li>" + stock[i].name + " "
-          + "<button onclick='changeStatus(" + i + ")'>" + statusText[stock[i].status] + "</button> "
-          + "<button onclick='deleteFood(" + i + ")'>削除</button></li>";
-  }
-  document.getElementById("stock").innerHTML = list;
-  localStorage.setItem("stock", JSON.stringify(stock));
-}
+      if (notYet === "") {
+        document.getElementById("message").textContent = "🎉 全員食べました！";
+      } else {
+        document.getElementById("message").textContent = "⚠️ " + notYet + " の分を残してください";
+      }
+    }
 
-function addFood() {
-  const name = document.getElementById("foodInput").value.trim();
-  if (name === "") return;
-  stock.push({ name: name, status: 0 });
-  document.getElementById("foodInput").value = "";
-  showStock();
-}
+    function toggleAte(i) {
+      let name = members[i];
+      let place = meal.ate.indexOf(name);
+      if (place === -1) {
+        meal.ate.push(name);       // まだ → 食べたに追加
+      } else {
+        meal.ate.splice(place, 1); // 食べた → 取り消し
+      }
+      localStorage.setItem("meal", JSON.stringify(meal));
+      showMembers();
+    }
 
-function changeStatus(i) {
-  stock[i].status = (stock[i].status + 1) % 3;
-  showStock();
-}
+    showMembers();
 
-function deleteFood(i) {
-  stock.splice(i, 1);
-  showStock();
-}
+    // ===== 6. 食材ストック =====
+    // 状態：0=ある、1=少ない、2=ない
+    let statusText = ["🟢 ある", "🟡 少ない", "🔴 ない"];
+    let stock = JSON.parse(localStorage.getItem("stock"));
+    if (stock === null) {
+      stock = [];
+    }
 
-showStock();
+    function showStock() {
+      let list = "";
+      for (let i = 0; i < stock.length; i++) {
+        list = list + "<li>" + stock[i].name + " "
+                    + "<button onclick='changeStatus(" + i + ")'>" + statusText[stock[i].status] + "</button> "
+                    + "<button onclick='deleteFood(" + i + ")'>削除</button></li>";
+      }
+      document.getElementById("stock").innerHTML = list;
+      localStorage.setItem("stock", JSON.stringify(stock));
+    }
+
+    function addFood() {
+      let name = document.getElementById("foodInput").value.trim();
+      if (name === "") {
+        return; // 何も入力されていないときは何もしない
+      }
+      stock.push({ name: name, status: 0 });
+      document.getElementById("foodInput").value = "";
+      showStock();
+    }
+
+    function changeStatus(i) {
+      stock[i].status = stock[i].status + 1;
+      if (stock[i].status === 3) {
+        stock[i].status = 0; // ない → ある に戻る
+      }
+      showStock();
+    }
+
+    function deleteFood(i) {
+      stock.splice(i, 1);
+      showStock();
+    }
+
+    showStock();
   </script>
 </body>
 </html>
